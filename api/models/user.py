@@ -2,7 +2,7 @@ from tornado.gen import *
 import bcrypt
 import jwt
 import base64
-from api.stores.user import User, LinkedAccount
+from api.stores.user import User, LinkedAccount, LinkedAccountType
 from api.core.user import UserHelper
 from api.core.group import GroupHelper
 import tornado.ioloop
@@ -25,31 +25,21 @@ class UserModel(object):
         email
         :return:
         """
-        isValid = self.validate_password(postBodyDict)
-        if not postBodyDict.get('email'):
-            raise Return({'status':'error', 'message':'you must enter email'})
-
-        if isValid and isValid.get('status') == 'error':
-            raise Return(isValid)
-
-        user = User()
-        user.PrimaryEmail = postBodyDict['email']
-        password = yield self.get_hashed_password(postBodyDict['password'])
-        linkedaccount = LinkedAccount()
-        linkedaccount.AccountName = postBodyDict['email']
-        linkedaccount.AccountHash = password['hash']
-        user.LinkedAccounts = [linkedaccount]
-        user_result = yield self._uh.save_user(user.datadict)
-
-        if not user_result.acknowledged:
-            raise NotImplementedError('Db error thrown')
-
-        group = yield self._gh.createDummyGroupForUser(user_result.inserted_id)
-        if not group.acknowledged:
-            raise NotImplementedError('Db error')
-        yield self._gh.createGroupMemberMappingForDummyGroup(group.inserted_id, user_result.inserted_id)
-        raise Return({'status':'success'})
-
+        try:
+            user = User()
+            user.PrimaryEmail = postBodyDict.get('email')
+            password = yield self.get_hashed_password(postBodyDict.get('password'))
+            linkedaccount = LinkedAccount()
+            linkedaccount.AccountName = postBodyDict.get('email')
+            linkedaccount.AccountHash = password.get('hash')
+            linkedaccount.AccountType = LinkedAccountType.Native
+            user.LinkedAccounts = [linkedaccount]
+            user_result = yield self._uh.save_user(user.datadict)
+            group = yield self._gh.createDummyGroupForUser(user_result.inserted_id)
+            yield self._gh.createGroupMemberMappingForDummyGroup(group.inserted_id, user_result.inserted_id)
+            raise Return((True, user_result.inserted_id))
+        except Exception as e:
+            raise Return((False, str(e)))
 
 
     def validate_password(self, postBodyDict):
@@ -69,6 +59,9 @@ class UserModel(object):
     def login(self, dict):
         username = dict.get('username')
         password = dict.get('password')
+        if not username or not password:
+            raise Return((False, 'You must enter both fields'))
+
         try:
             user = yield self._uh.getUserByUsername(username)
             linkedAccount = user.LinkedAccounts[0]
@@ -80,3 +73,5 @@ class UserModel(object):
                 raise Return((False,'Wrong password'))
         except IndexError:
             raise Return((False, 'user email does not exist'))
+        except Exception as e:
+            raise Return((False, 'error'))

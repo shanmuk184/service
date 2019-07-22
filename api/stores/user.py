@@ -1,6 +1,6 @@
 from enum import Enum
 from .base import BaseStoreModel
-
+import re
 class SupportedRoles:
     Admin = 'ad'
     Member = 'me'
@@ -8,6 +8,9 @@ class SupportedRoles:
 class DisplayRoles:
     Employee = 'Employee'
     Owner = 'Owner'
+
+class LinkedAccountType:
+    Native = 'native'
 
 
 class StatusType:
@@ -140,9 +143,11 @@ class User(BaseStoreModel):
     def PrimaryEmail(self, primaryemail):
         if not primaryemail:
             raise NotImplementedError()
-        print(self.PropertyNames.PrimaryEmail)
-        self.set_value(self.PropertyNames.PrimaryEmail, primaryemail)
-
+        isValid = re.search('(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)',primaryemail)
+        if isValid:
+            self.set_value(self.PropertyNames.PrimaryEmail, primaryemail)
+        else:
+            raise ValueError('you must enter valid email')
 
     @property
     def LinkedAccounts(self):
@@ -183,9 +188,16 @@ class User(BaseStoreModel):
     def populate_data_dict(self,dictParam=None):
         self._data_dict = dictParam
         linkedAccountsList = dictParam.get(self.PropertyNames.LinkedAccounts)
+        groupsList = dictParam.get(self.PropertyNames.Groups)
         linkedaccounts = []
+        groups = []
         for linkedAccount in linkedAccountsList:
             linkedaccount = LinkedAccount()
             linkedaccount.populate_data_dict(linkedAccount)
             linkedaccounts.append(linkedAccount)
+        for group in groupsList:
+            groupMapping = GroupMapping()
+            groupMapping.populate_data_dict(group)
+            groups.append(groupMapping)
         self.set_value(self.PropertyNames.LinkedAccounts, linkedaccounts)
+        self.set_value(self.PropertyNames.Groups, groups)

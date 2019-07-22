@@ -1,6 +1,12 @@
+
+
 class BaseStoreModel:
     def __init__(self):
         self._data_dict = {}
+
+    class BaseProperties:
+        CreatedAt = 'created_at'
+        UpdatedAt = 'updated_at'
 
     class PropertyNames:
         pass
