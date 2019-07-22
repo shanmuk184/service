@@ -11,12 +11,13 @@ class RegisterHandler(BaseHandler):
 
 
 class LoginHandler(BaseHandler):
-
     @coroutine
     def post(self):
-        user = yield self._uh.login(self.args)
-        if user.get('userProfile'):
-            authToken = yield self.authorize(user.get('userProfile'))
+        (status, _) = yield self._uh.login(self.args)
+        if status:
+            authToken = yield self.authorize(_)
             self.write(json.dumps({'status': 'success', 'auth_token': authToken}))
         else:
-            self.write(json.dumps(user))
+            self.set_status(403)
+            self.write(json.dumps(_))
+            self.finish()

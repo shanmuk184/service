@@ -27,10 +27,12 @@ class GroupHelper:
         groupMapping.GroupId = dummyGroupId
         groupMapping.Roles = [SupportedRoles.Member]
         groupMapping.Status = StatusType.Accepted
-        yield self.db.UserCollection.update({
+
+        yield self.db.UserCollection.update_one({
             User.PropertyNames.UserId: userId
         },
             {
                 QueryConstants.AddToSet: {
                     User.PropertyNames.Groups: groupMapping.datadict
                 }})
+

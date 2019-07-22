@@ -6,4 +6,3 @@ while(cursor.hasNext()){
       printjson(cursor.next());
    }
 }
-

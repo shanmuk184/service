@@ -5,12 +5,12 @@ class SupportedRoles:
     Admin = 'ad'
     Member = 'me'
 
-class DisplayRoles(Enum):
+class DisplayRoles:
     Employee = 'Employee'
     Owner = 'Owner'
 
 
-class StatusType(Enum):
+class StatusType:
     Invited = 'invited'
     Accepted = 'accepted'
 
@@ -112,10 +112,6 @@ class LinkedAccount(BaseStoreModel):
         accountname = 'AccountName'
         accounthash = 'AccountHash'
 
-    def populate_data_dict(self, dict=None):
-        if dict:
-            self.populate_data_dict(dict)
-
 
 
 class User(BaseStoreModel):
@@ -158,22 +154,7 @@ class User(BaseStoreModel):
         '''Accepts array argument to be set'''
         if not linkedAccounts:
             raise NotImplementedError()
-        self.set_value(self.PropertyNames.PrimaryEmail, linkedAccounts)
-
-    @property
-    def LinkedAccounts(self):
-        return self.get_value(self.PropertyNames.LinkedAccounts)
-
-
-    @LinkedAccounts.setter
-    def LinkedAccounts(self, linkedAccounts:list):
-        '''Accepts array argument to be set'''
-        if not linkedAccounts:
-            raise NotImplementedError()
-        self.set_value(self.PropertyNames.PrimaryEmail, linkedAccounts)
-
-
-
+        self.set_value(self.PropertyNames.LinkedAccounts, linkedAccounts)
 
     @property
     def Groups(self):

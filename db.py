@@ -4,7 +4,7 @@ from enum import Enum
 from tornado.gen import coroutine, Return
 settings = Settings()
 
-class QueryConstants(Enum):
+class QueryConstants:
     Set = '$set'
     AddToSet = '$addToSet'
 
@@ -12,7 +12,6 @@ class Database:
     def __init__(self, db=None):
         if db:
             self.db = db
-
     class CollectionNames:
         User = 'user'
         Group = 'group'
@@ -22,12 +21,11 @@ class Database:
 
 
     @property
-    def UserCollection(self):
+    def UserCollection(self, *args, **kwargs):
         if not self.db:
            raise NotImplementedError()
-
-
-        raise Return(self.db.get_collection(self.CollectionNames.User))
+        user = self.db[self.CollectionNames.User]
+        return user
 
 
 
@@ -35,9 +33,11 @@ class Database:
     def GroupCollection(self):
         if not self.db:
            raise NotImplementedError()
-        raise Return(self.db.get_collection(self.CollectionNames.Group))
+        group = self.db[self.CollectionNames.Group]
+        return group
 
     def get_database(self):
         port = int(settings.DbPort)
         conn = MotorClient(settings.DbHost, port)
-        return conn.get_database(settings.DbName)
+        db = getattr(conn, 'dev')
+        return db

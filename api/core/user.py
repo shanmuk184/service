@@ -1,6 +1,7 @@
 from tornado.gen import *
 from api.stores.user import User, LinkedAccount
 from db import Database
+from tornado.ioloop import IOLoop
 class UserHelper:
     def __init__(self, user, db):
         self._user = user
@@ -14,10 +15,13 @@ class UserHelper:
 
     @coroutine
     def getUserByUsername(self, username):
-        user = yield self.db.UserCollection.find_one({'primary_email': username })
-        userprofile = User()
-        userprofile.populate_data_dict(user)
-        raise Return(userprofile)
+        user = yield self.db.UserCollection.find_one({User.PropertyNames.PrimaryEmail: username})
+        if user:
+            userprofile = User()
+            userprofile.populate_data_dict(user)
+            raise Return(userprofile)
+        else:
+            raise IndexError('No User found')
 
     @coroutine
     def updateUserAuthToken(self, userId:bytes, authToken:bytes):
@@ -27,7 +31,4 @@ class UserHelper:
 
         updateDict[User.PropertyNames.LinkedAccounts+'.'+LinkedAccount.PropertyNames.AuthToken] = authToken
         yield self.db.UserCollection.update(criteria, updateDict)
-
-
-
 
