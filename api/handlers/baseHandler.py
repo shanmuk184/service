@@ -4,6 +4,7 @@ import simplejson as json
 import jwt
 from config import Settings
 from api.core.user import UserHelper
+
 settings=Settings()
 class BaseHandler(RequestHandler):
     def __init__(self, application , request, **kwargs):
@@ -69,6 +70,7 @@ class BaseHandler(RequestHandler):
             self._transforms = []
             self.write("Missing authorization")
             self.finish()
+
     @coroutine
     def get_current_user(self):
         (payload)= yield self.jwt_auth()

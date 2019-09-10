@@ -1,6 +1,7 @@
 from enum import Enum
 from .base import BaseStoreModel
 import re
+
 class SupportedRoles:
     Admin = 'ad'
     Member = 'me'
@@ -12,7 +13,6 @@ class DisplayRoles:
 class LinkedAccountType:
     Native = 'native'
 
-
 class StatusType:
     Invited = 'invited'
     Accepted = 'accepted'
@@ -22,6 +22,7 @@ class StatusType:
 class GroupMapping(BaseStoreModel):
     class PropertyNames:
         GroupId ='group_id'
+
         Roles = 'roles'
         Status = 'status'
         Shifts = 'shift'
@@ -58,7 +59,6 @@ class GroupMapping(BaseStoreModel):
         if not isinstance(roles, list):
             raise NotImplementedError()
         self.set_value(self.PropertyNames.Roles, roles)
-
 
 class LinkedAccount(BaseStoreModel):
     def __init__(self,accountname=None, accounthash=None, accounttype=None, **kwargs):
@@ -171,6 +171,35 @@ class User(BaseStoreModel):
             raise NotImplementedError()
         self.set_value(self.PropertyNames.Groups, groups)
 
+    @property
+    def Name(self):
+        return self.get_value(self.PropertyNames.Name)
+
+    @Name.setter
+    def Name(self, name:str):
+        if not name:
+            raise NotImplementedError('you must enter name')
+        self.set_value(self.PropertyNames.Name, name)
+    @property
+    def EmployeeId(self):
+        return self.get_value(self.PropertyNames.EmployeeId)
+
+    @EmployeeId.setter
+    def EmployeeId(self, employeeId:int):
+        if not employeeId:
+            raise NotImplementedError('you must enter employee id')
+        self.set_value(self.PropertyNames.EmployeeId, employeeId)
+
+    @property
+    def Phone(self):
+        return self.get_value(self.PropertyNames.Phone)
+
+    @Phone.setter
+    def Phone(self, phone: str):
+        if not phone:
+            raise NotImplementedError('you must enter phone')
+        self.set_value(self.PropertyNames.Phone, phone)
+
     DbPropertiesDict = {
         '_id': 'UserId',
         'primaryemail': 'PrimaryEmail',
@@ -180,10 +209,13 @@ class User(BaseStoreModel):
 
     class PropertyNames:
         UserId = '_id'
+        Name = 'name'
         PrimaryEmail = 'primary_email'
         CompanyName = 'companyname'
         LinkedAccounts = 'linkedaccounts'
         Groups = 'groups'
+        Phone = 'phone'
+        EmployeeId = 'employee_id'
 
     def populate_data_dict(self,dictParam=None):
         self._data_dict = dictParam

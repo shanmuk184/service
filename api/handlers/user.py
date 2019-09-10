@@ -6,13 +6,13 @@ from api.models.user import UserModel
 from bson.json_util import dumps
 
 class RegisterHandler(BaseHandler):
-    def __init__(self, application , request, **kwargs):
-        super().__init__(application , request, **kwargs)
-
     @coroutine
     def post(self):
         model = UserModel(db=self.db)
-        (status, _) = yield model.create_user(self.args)
+        try:
+            (status, _) = yield model.create_user(self.args)
+        except Exception as e:
+            (status, _) = (False, str(e))
         if status:
             authToken = yield self.authorize(_)
             self.write(json.dumps({'status': 'success', 'auth_token': authToken}))

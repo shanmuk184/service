@@ -1,7 +1,6 @@
 from tornado.gen import *
-from api.stores.user import User, LinkedAccount
+from api.stores.user import User, LinkedAccount, GroupMapping, SupportedRoles, StatusType
 from db import Database
-from api.stores.user import User
 from tornado.ioloop import IOLoop
 from bson import ObjectId
 class UserHelper:
@@ -26,20 +25,35 @@ class UserHelper:
         userDict = yield self.db.UserCollection.find_one({'_id':ObjectId(userId)})
         if userDict:
             user = User()
-
             user.populate_data_dict(userDict)
             raise Return(user)
+    @coroutine
+    def getUserByEmployeeId(self, employeeId):
+        if not employeeId:
+            raise NotImplementedError('employee ')
+        user = yield self.db.UserCollection.find_one({User.PropertyNames.EmployeeId: employeeId})
+        if user:
+            userprofile = User()
+            userprofile.populate_data_dict(user)
+            raise Return(userprofile)
 
+    def create_group_mapping(self, groupId, role):
+        memberMapping = GroupMapping()
+        memberMapping.GroupId = groupId
+        memberMapping.Roles = [role]
+        if role == SupportedRoles.Admin:
+            memberMapping.Status = StatusType.Accepted
+        else:
+            memberMapping.Status = StatusType.Invited
+        return memberMapping
 
     @coroutine
-    def getUserByUsername(self, username):
+    def getUserByEmail(self, username):
         user = yield self.db.UserCollection.find_one({User.PropertyNames.PrimaryEmail: username})
         if user:
             userprofile = User()
             userprofile.populate_data_dict(user)
             raise Return(userprofile)
-        else:
-            raise IndexError('No User found')
 
     @coroutine
     def updateUserAuthToken(self, userId:bytes, authToken:bytes):

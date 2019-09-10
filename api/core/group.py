@@ -1,12 +1,15 @@
 from tornado.gen import *
-from api.stores.group import Group
+from api.stores.group import Group, MemberMapping
 from api.stores.user import GroupMapping, SupportedRoles, User, StatusType
 from db import QueryConstants
 from db import Database
 
 class GroupHelper:
     def __init__(self, user, db):
-        self._user = user
+        if user:
+            self._user = user
+        if not db:
+            raise ValueError('db should be present')
         database = Database(db)
         self.db = database
 
@@ -22,17 +25,33 @@ class GroupHelper:
         raise Return(group_result)
 
     @coroutine
-    def createGroupMemberMappingForDummyGroup(self, dummyGroupId, userId):
-        groupMapping = GroupMapping()
-        groupMapping.GroupId = dummyGroupId
-        groupMapping.Roles = [SupportedRoles.Member]
-        groupMapping.Status = StatusType.Accepted
+    def create_group_for_user(self, groupDict:dict):
+        if not groupDict:
+            raise Return('error')
+        group = yield self.db.GroupCollection.insert_one(groupDict)
+        raise Return(group)
 
-        yield self.db.UserCollection.update_one({
-            User.PropertyNames.UserId: userId
-        },
-            {
-                QueryConstants.AddToSet: {
-                    User.PropertyNames.Groups: groupMapping.datadict
-                }})
 
+    def create_member_mapping(self, groupId, role):
+        memberMapping = MemberMapping()
+        memberMapping.GroupId = groupId
+        memberMapping.Roles = [role]
+        if role == SupportedRoles.Admin:
+            memberMapping.Status = StatusType.Accepted
+        else:
+            memberMapping.Status = StatusType.Invited
+        return memberMapping
+
+    @coroutine
+    def insert_member_mapping_into_group(self, groupId, mappingDict):
+        if not mappingDict or not groupId:
+            raise NotImplementedError()
+        yield self.db.GroupCollection.update({'_id':groupId}, {QueryConstants.AddToSet:{Group.PropertyNames.MemberMappings:mappingDict}}, w=1)
+
+    @coroutine
+    def insert_group_mapping_into_user(self, userId, mappingDict):
+        if not mappingDict or not userId:
+            raise NotImplementedError()
+        user_result = yield self.db.UserCollection.update({'_id': userId}, {
+            QueryConstants.AddToSet: {Group.PropertyNames.MemberMappings: mappingDict}}, w=1)
+        raise Return(user_result)
