@@ -79,7 +79,7 @@ class LinkedAccount(BaseStoreModel):
 
     @property
     def AccountHash(self):
-        return self._data_dict.get(self.PropertyNames.AccountHash)
+        return self.get_value(self.PropertyNames.AccountHash)
 
 
     @AccountHash.setter
@@ -195,9 +195,11 @@ class User(BaseStoreModel):
             linkedaccount = LinkedAccount()
             linkedaccount.populate_data_dict(linkedAccount)
             linkedaccounts.append(linkedAccount)
-        for group in groupsList:
-            groupMapping = GroupMapping()
-            groupMapping.populate_data_dict(group)
-            groups.append(groupMapping)
+        if groupsList:
+            for group in groupsList:
+                groupMapping = GroupMapping()
+                groupMapping.populate_data_dict(group)
+                groups.append(groupMapping)
         self.set_value(self.PropertyNames.LinkedAccounts, linkedaccounts)
-        self.set_value(self.PropertyNames.Groups, groups)
+        if groupsList:
+            self.set_value(self.PropertyNames.Groups, groups)

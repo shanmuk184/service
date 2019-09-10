@@ -5,15 +5,18 @@ import base64
 from api.stores.user import User, LinkedAccount, LinkedAccountType
 from api.core.user import UserHelper
 from api.core.group import GroupHelper
+
 import tornado.ioloop
 
 
 class UserModel(object):
-    def __init__(self, user, db):
-        self._user = user
+    def __init__(self, user=None, db=None):
+        if not db:
+            raise ValueError('db should be present')
+        if user:
+            self._user = user
         self.db = db
-        self._uh = UserHelper(self._user, self.db)
-        self._gh = GroupHelper(self._user, self.db)
+        self._uh = UserHelper(db= self.db)
 
     @coroutine
     def create_user(self, postBodyDict):
@@ -35,11 +38,17 @@ class UserModel(object):
             linkedaccount.AccountType = LinkedAccountType.Native
             user.LinkedAccounts = [linkedaccount]
             user_result = yield self._uh.save_user(user.datadict)
-            group = yield self._gh.createDummyGroupForUser(user_result.inserted_id)
-            yield self._gh.createGroupMemberMappingForDummyGroup(group.inserted_id, user_result.inserted_id)
-            raise Return((True, user_result.inserted_id))
+            user = yield self._uh.getUserByUserId(user_result.inserted_id)
+            # group = yield self._gh.createDummyGroupForUser(user_result.inserted_id)
+            # yield self._gh.createGroupMemberMappingForDummyGroup(group.inserted_id, user_result.inserted_id)
         except Exception as e:
             raise Return((False, str(e)))
+        else:
+            raise Return((True, user))
+
+    @coroutine
+    def get_profile(self):
+        raise Return(self._user.datadict)
 
 
     def validate_password(self, postBodyDict):
@@ -49,7 +58,6 @@ class UserModel(object):
     @coroutine
     def get_hashed_password(self, plain_text_password):
         raise Return({'hash':bcrypt.hashpw(plain_text_password.encode('utf-8'), bcrypt.gensalt(12))})
-
 
     @coroutine
     def check_hashed_password(self, text_password, hashed_password):
@@ -73,5 +81,3 @@ class UserModel(object):
                 raise Return((False,'Wrong password'))
         except IndexError:
             raise Return((False, 'user email does not exist'))
-        except Exception as e:
-            raise Return((False, 'error'))

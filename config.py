@@ -17,6 +17,30 @@ class Settings:
         DbName = 'db_name'
         AutoReload = 'auto_reload'
         CookieSecret= 'cookie_secret'
+        AppName = 'app_name'
+        Debug = 'debug'
+        Version = 'version'
+        KeyVersion = 'key_version'
+        JwtAlgorithm = 'jwt_algorithm'
+
+    @property
+    def Version(self):
+        version = self.get_setting(self.SectionNames.AppSettings, self.SettingNames.Version)
+        return version
+
+    @property
+    def KeyVersion(self):
+        key_version =  self.get_setting(self.SectionNames.AppSettings, self.SettingNames.KeyVersion)
+        return int(key_version)
+
+    @property
+    def Debug(self):
+        deb = self.get_setting(self.SectionNames.AppSettings, self.SettingNames.Debug)
+        return bool(deb)
+
+    @property
+    def AppName(self):
+        return self.get_setting(self.SectionNames.AppSettings, self.SettingNames.AppName)
 
     @property
     def CookieSecret(self):
@@ -38,8 +62,9 @@ class Settings:
     def AutoReload(self):
         return self.get_setting(self.SectionNames.AppSettings, self.SettingNames.AutoReload)
 
-
-
+    @property
+    def JwtAlgorithm(self):
+        return self.get_setting(self.SectionNames.AppSettings, self.SettingNames.JwtAlgorithm)
 
     def populate_settings(self):
         config = configparser.ConfigParser()

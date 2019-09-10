@@ -2,14 +2,21 @@ from tornado import web
 from tornado.gen import *
 from .baseHandler import BaseHandler
 import simplejson as json
+from api.models.user import UserModel
+from bson.json_util import dumps
 
 class RegisterHandler(BaseHandler):
+    def __init__(self, application , request, **kwargs):
+        super().__init__(application , request, **kwargs)
+
     @coroutine
     def post(self):
-        (status, _) = yield self._uh.create_user(self.args)
+        model = UserModel(db=self.db)
+        (status, _) = yield model.create_user(self.args)
         if status:
             authToken = yield self.authorize(_)
             self.write(json.dumps({'status': 'success', 'auth_token': authToken}))
+            self.finish()
         else:
             self.set_status(400)
             self.write(_)
@@ -18,7 +25,8 @@ class RegisterHandler(BaseHandler):
 class LoginHandler(BaseHandler):
     @coroutine
     def post(self):
-        (status, _) = yield self._uh.login(self.args)
+        model = UserModel(db=self.db)
+        (status, _) = yield model.login(self.args)
         if status:
             authToken = yield self.authorize(_)
             self.write(json.dumps({'status': 'success', 'auth_token': authToken}))
@@ -26,3 +34,13 @@ class LoginHandler(BaseHandler):
             self.set_status(400)
             self.write(json.dumps(_))
             self.finish()
+
+class ProfileHandler(BaseHandler):
+
+    @web.authenticated
+    @coroutine
+    def get(self):
+        user = yield self.current_user
+        model = UserModel(user=user,db=self.db)
+        profile = yield model.get_profile()
+        self.write(dumps(profile))

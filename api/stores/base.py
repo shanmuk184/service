@@ -43,7 +43,6 @@ class BaseStoreModel:
         return self._data_dict.get(key)
 
     def set_value(self, key, value):
-        if not (key and value):
+        if not key or not value:
             raise NotImplementedError()
-        print(key)
         self._data_dict[key] = value

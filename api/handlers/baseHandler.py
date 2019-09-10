@@ -1,33 +1,44 @@
 from tornado.web import RequestHandler
 from tornado.gen import *
-from ..models.user import UserModel
 import simplejson as json
 import jwt
-
+from config import Settings
+from api.core.user import UserHelper
+settings=Settings()
 class BaseHandler(RequestHandler):
     def __init__(self, application , request, **kwargs):
         super().__init__(application, request, **kwargs)
-        self._uh = UserModel(self.get_current_user(), self.settings['db'])
-
-    @coroutine
-    def create_auth_token(self, id):
-        jwt_token = jwt.encode({"id": str(id)}, key=self.settings.get('cookie_secret'), algorithm='HS256')
-        raise Return(jwt_token)
-
-    @coroutine
-    def validate_auth_token(self, authToken):
-        payload = jwt.decode(authToken, key=self.settings.get('cookie_secret'), algorithms='HS256')
-        raise Return(payload)
-
-    def jwt_auth(self):
-        auth = self.request.headers.get('Authorization')
-        options = {
+        self._user = None
+        self.jwt_options = {
             'verify_signature': True,
             'verify_exp': True,
             'verify_nbf': False,
             'verify_iat': True,
             'verify_aud': False
         }
+        self.db = self.settings['db']
+        self._uh = UserHelper(db=self.db)
+
+    @coroutine
+    def create_auth_token(self, id):
+        print(settings.JwtAlgorithm)
+        jwt_token = jwt.encode({"id": str(id)}, key=settings.CookieSecret, algorithm=settings.JwtAlgorithm)
+        raise Return(jwt_token)
+
+    @coroutine
+    def set_auth_token_header(self, authToken=None):
+        if authToken:
+            self.set_secure_cookie(settings.AppName, authToken)
+        self.set_header('Authorization', 'Bearer {}'.format(authToken))
+
+    @coroutine
+    def validate_auth_token(self, authToken):
+        payload = jwt.decode(authToken, key=settings.CookieSecret, algorithm='HS256', verify=True, options=self.jwt_options)
+        raise Return(payload)
+
+    @coroutine
+    def jwt_auth(self):
+        auth = self.request.headers.get('Authorization')
 
         if auth:
             parts = auth.split()
@@ -46,31 +57,30 @@ class BaseHandler(RequestHandler):
                 self.set_status(401)
                 self.write("invalid header authorization")
                 self.finish()
-
-            token = parts[1]
-            try:
-                jwt.decode(
-                    token,
+            else:
+                payload = jwt.decode(
+                    parts[1],
                     self.settings['cookie_secret'],
-                    options=options
+                    options=self.jwt_options
                 )
+                raise Return(payload)
 
-            except Exception as e:
-                self._transforms = []
-                self.set_status(401)
-                self.write(e.message)
-                self.finish()
         else:
             self._transforms = []
             self.write("Missing authorization")
             self.finish()
-        return True
-
+    @coroutine
     def get_current_user(self):
-        pass
+        (payload)= yield self.jwt_auth()
+        if payload:
+            user = yield self._uh.getUserByUserId(payload['id'])
+            if user:
+                self._user = user
+                raise Return(user)
 
     def prepare(self):
-        self.args = json.loads(self.request.body)
+        if self.request.method == 'POST':
+            self.args = json.loads(self.request.body)
 
     @coroutine
     def set_default_headers(self):
@@ -91,5 +101,9 @@ class BaseHandler(RequestHandler):
 
     @coroutine
     def authorize(self, user_profile):
+        self.current_user = user_profile
         auth_token = yield self.create_auth_token(user_profile.UserId)
+        self._user = user_profile
+        self.set_cookie(settings.AppName, auth_token)
+        self.set_auth_token_header(auth_token)
         raise Return(auth_token)
