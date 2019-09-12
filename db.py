@@ -16,7 +16,8 @@ class Database:
         User = 'user'
         Group = 'group'
         Attendance = 'attendance'
-        Shifts = 'shifts'
+        Event = 'event'
+        Product = 'product'
 
     @property
     def UserCollection(self, *args, **kwargs):
@@ -29,8 +30,18 @@ class Database:
     def GroupCollection(self):
         if not self.db:
            raise NotImplementedError()
-        group = self.db[self.CollectionNames.Group]
-        return group
+        return self.db[self.CollectionNames.Group]
+    @property
+    def ProductCollection(self):
+        if not self.db:
+            raise NotImplementedError()
+        return self.db[self.CollectionNames.Product]
+
+    @property
+    def EventCollection(self):
+        if not self.db:
+            raise NotImplementedError()
+        return self.db[self.CollectionNames.Event]
 
     def get_motor_connection(self):
         port = int(settings.DbPort)
