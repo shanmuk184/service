@@ -3,6 +3,7 @@ import bcrypt
 import jwt
 import base64
 from api.stores.user import User, LinkedAccount, LinkedAccountType
+from api.stores.group import Group
 from api.core.user import UserHelper
 from api.core.group import GroupHelper
 
@@ -10,13 +11,15 @@ import tornado.ioloop
 
 
 class UserModel(object):
-    def __init__(self, user=None, db=None):
-        if not db:
+    def __init__(self, **kwargs):
+        if not kwargs.get('db'):
             raise ValueError('db should be present')
-        if user:
-            self._user = user
-        self.db = db
+        if kwargs.get('user'):
+            self._user = kwargs.get('user')
+
+        self.db = kwargs.get('db')
         self._uh = UserHelper(db= self.db)
+        self._gh = GroupHelper(db = self.db )
 
     @coroutine
     def check_if_user_exists_with_same_email(self, email):
@@ -63,6 +66,7 @@ class UserModel(object):
         user.LinkedAccounts = [linkedaccount]
         user_result = yield self._uh.save_user(user.datadict)
         user = yield self._uh.getUserByUserId(user_result.inserted_id)
+
         # group = yield self._gh.createDummyGroupForUser(user_result.inserted_id)
         # yield self._gh.createGroupMemberMappingForDummyGroup(group.inserted_id, user_result.inserted_id)
         raise Return((True, user))

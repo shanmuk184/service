@@ -1,7 +1,7 @@
 from enum import Enum
 from .base import BaseStoreModel
 import re
-
+from bson import ObjectId
 class SupportedRoles:
     Admin = 'ad'
     Member = 'me'
@@ -200,18 +200,17 @@ class User(BaseStoreModel):
             raise NotImplementedError('you must enter phone')
         self.set_value(self.PropertyNames.Phone, phone)
 
-    DbPropertiesDict = {
-        '_id': 'UserId',
-        'primaryemail': 'PrimaryEmail',
-        'linkedaccounts': 'LinkedAccounts',
-        'groups': 'Groups'
+    _reverseMappings = {
+        '_id': ('UserId', ObjectId),
+        'primaryemail': ('PrimaryEmail', str),
+        'linkedaccounts': ('LinkedAccounts', list, LinkedAccount),
+        'groups': ('Groups', list, GroupMapping),
     }
 
     class PropertyNames:
         UserId = '_id'
         Name = 'name'
         PrimaryEmail = 'primary_email'
-        CompanyName = 'companyname'
         LinkedAccounts = 'linkedaccounts'
         Groups = 'groups'
         Phone = 'phone'

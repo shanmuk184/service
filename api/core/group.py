@@ -31,6 +31,17 @@ class GroupHelper:
         group = yield self.db.GroupCollection.insert_one(groupDict)
         raise Return(group)
 
+    @coroutine
+    def get_groups_for_user(self, userId):
+        groupCursor = self.db.GroupCollection.find({Group.PropertyNames.OwnerId:userId})
+        groups = []
+        while (yield groupCursor.fetch_next):
+            groupDict = groupCursor.next_object()
+            group = Group()
+            group.populate_data_dict(groupDict)
+        raise Return((groups))
+
+
 
     def create_member_mapping(self, groupId, role):
         memberMapping = MemberMapping()

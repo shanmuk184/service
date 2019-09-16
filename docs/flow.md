@@ -1,3 +1,9 @@
+## Start Server
+python app.py
+## Start mongo
+mongod --fork --logpath /var/log/mongodb.log
+
+
 # This document defines Application flow
 ## Register Api
 <p>There are Two parts in register api.</p>

@@ -1,4 +1,4 @@
-
+import datetime
 
 class BaseStoreModel:
     def __init__(self):
@@ -7,6 +7,7 @@ class BaseStoreModel:
     class BaseProperties:
         CreatedAt = 'created_at'
         UpdatedAt = 'updated_at'
+    _reverseMapping = {}
 
     class PropertyNames:
         pass
@@ -31,10 +32,31 @@ class BaseStoreModel:
                 _flat_dict[key] = entries
             else:
                 _flat_dict[key] = value
+            _flat_dict[self.BaseProperties.UpdatedAt] = datetime.datetime.now()
         return _flat_dict
 
     def populate_data_dict(self, dictParam=None):
-        self._data_dict = dictParam
+        self._data_dict=dictParam
+        if self._reverseMapping:
+            for key in dictParam:
+                reverseMapping = self._reverseMapping.get(key)
+                value = dictParam[key]
+                if len(reverseMapping) == 2:
+                    if not isinstance(value, reverseMapping[1]):
+                        value = reverseMapping[1](dictParam[key])
+                    self.set_value(key, value)
+                elif len(reverseMapping) == 3:
+                    valueList = dictParam[key]
+                    values = []
+                    for value in valueList:
+                        holding_container = reverseMapping[2]()
+                        holding_container.populate_data_dict(value)
+                        values.append(holding_container)
+                    self.set_value(key, values)
+                else:
+                    self.set_value(key, value)
+
+
 
 
     def get_value(self, key):

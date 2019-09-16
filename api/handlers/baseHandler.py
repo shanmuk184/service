@@ -9,7 +9,7 @@ settings=Settings()
 class BaseHandler(RequestHandler):
     def __init__(self, application , request, **kwargs):
         super().__init__(application, request, **kwargs)
-        self._user = None
+
         self.jwt_options = {
             'verify_signature': True,
             'verify_exp': True,
@@ -79,8 +79,9 @@ class BaseHandler(RequestHandler):
             if user:
                 self._user = user
                 raise Return(user)
-
+    @coroutine
     def prepare(self):
+        self._user = yield self.current_user
         if self.request.method == 'POST':
             self.args = json.loads(self.request.body)
 
