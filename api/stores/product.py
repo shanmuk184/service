@@ -5,7 +5,13 @@ class Product(BaseStoreModel):
         Name = 'name'
         ProductCode = 'pc'
         ProductId = 'pId'
+        AvailableQuantity = 'aq'
+        TotalQuantity = 'tq'
         GroupId = 'groupid'
+
+    @property
+    def AvailableQuantity(self):
+        return self.get_value(self.PropertyNames.AvailableQuantity)
 
 
     # _reverseMapping={

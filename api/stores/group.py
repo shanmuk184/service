@@ -5,11 +5,10 @@ from bson import ObjectId
 from datetime import datetime
 
 class GroupType(Enum):
-    Restaurent = 'res'
-    PharmaCompany = 'phc'
-    PharmaDistributor = 'phd'
-    EmployeeTeam = 'emt'
-
+    Stockist = 'res'
+    Direct = 'phc'
+    Doctor = 'phd'
+    Counter = 'emt'
 
 class MemberMapping(BaseStoreModel):
     class PropertyNames:

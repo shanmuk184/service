@@ -1,16 +1,13 @@
 from tornado.gen import *
 from api.stores.group import Group, MemberMapping
-from api.stores.user import GroupMapping, SupportedRoles, User, StatusType
-from db import QueryConstants
-from db import Database
+from api.stores.user import SupportedRoles, StatusType
+from db.db import QueryConstants
+from db.db import Database
 
 class GroupHelper:
-    def __init__(self, user, db):
-        if user:
-            self._user = user
-        if not db:
-            raise ValueError('db should be present')
-        database = Database(db)
+    def __init__(self,**kwargs):
+        self._user = kwargs.get('user')
+        database = Database(kwargs.get('db'))
         self.db = database
 
 
@@ -37,8 +34,7 @@ class GroupHelper:
         groups = []
         while (yield groupCursor.fetch_next):
             groupDict = groupCursor.next_object()
-            group = Group()
-            group.populate_data_dict(groupDict)
+            groups.append(groupDict)
         raise Return((groups))
 
 

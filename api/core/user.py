@@ -1,7 +1,6 @@
 from tornado.gen import *
 from api.stores.user import User, LinkedAccount, GroupMapping, SupportedRoles, StatusType
-from db import Database
-from tornado.ioloop import IOLoop
+from db.db import Database
 from bson import ObjectId
 class UserHelper:
     def __init__(self, user=None, db=None):

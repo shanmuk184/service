@@ -2,6 +2,7 @@ from enum import Enum
 from .base import BaseStoreModel
 import re
 from bson import ObjectId
+from tornado_swirl.swagger import schema
 class SupportedRoles:
     Admin = 'ad'
     Member = 'me'
@@ -9,6 +10,42 @@ class SupportedRoles:
 class DisplayRoles:
     Employee = 'Employee'
     Owner = 'Owner'
+
+@schema
+class RegisterRequestParams:
+    """
+    Properties:
+        name (str) -- Required Shanmuk
+        email (email) -- Required
+        phone (str) -- Required
+        employeeid (int) -- Required
+        password (password) -- Required
+    """
+    Name = 'name'
+    Email = 'email'
+    Phone = 'phone'
+    EmployeeId = 'employeeid'
+    Password = 'password'
+
+@schema
+class LoginRequestParams:
+    """
+    Properties:
+        username (email) -- Required
+        password (password) -- Required
+    """
+    UserName = 'username'
+    Password = 'password'
+@schema
+class SuccessResponse:
+    """
+    Properties:
+        status (str) -- Required
+        authToken (str) -- Required
+    """
+    Status = 'status'
+    AuthToken = 'authToken'
+
 
 class LinkedAccountType:
     Native = 'native'
@@ -116,11 +153,24 @@ class LinkedAccount(BaseStoreModel):
         accounthash = 'AccountHash'
 
 
+@schema
+class ProfileSchema:
+    """
+    Properties:
+        _id (str) -- Userid
+        primaryemail (email) -- Email
+        phone (str) -- Phone
+        employeeid -- EmployeeId
+    """
+    pass
+
 
 class User(BaseStoreModel):
     '''
     This Design assumes All other baseModels are populated and entered into user
+
     '''
+
     def __init__(self, **kwargs):
         super().__init__()
 
@@ -205,16 +255,18 @@ class User(BaseStoreModel):
         'primaryemail': ('PrimaryEmail', str),
         'linkedaccounts': ('LinkedAccounts', list, LinkedAccount),
         'groups': ('Groups', list, GroupMapping),
+        'phone': ('Phone', str),
+        'employeeid':('EmployeeId', int)
     }
 
     class PropertyNames:
         UserId = '_id'
         Name = 'name'
-        PrimaryEmail = 'primary_email'
+        PrimaryEmail = 'primaryemail'
         LinkedAccounts = 'linkedaccounts'
         Groups = 'groups'
         Phone = 'phone'
-        EmployeeId = 'employee_id'
+        EmployeeId = 'employeeid'
 
     def populate_data_dict(self,dictParam=None):
         self._data_dict = dictParam
@@ -234,3 +286,8 @@ class User(BaseStoreModel):
         self.set_value(self.PropertyNames.LinkedAccounts, linkedaccounts)
         if groupsList:
             self.set_value(self.PropertyNames.Groups, groups)
+
+#
+# class UserRegistrationForm(BaseApiModel):
+#     _fields = ()
+

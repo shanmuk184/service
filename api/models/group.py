@@ -1,16 +1,8 @@
-from tornado.gen import coroutine, Return
 from api.stores.group import Group, GroupType
-from api.stores.user import GroupMapping, SupportedRoles, User, StatusType
-from db import QueryConstants
+from api.stores.user import SupportedRoles
 from tornado.gen import *
-import bcrypt
-import jwt
-import base64
-from api.stores.user import User, LinkedAccount, LinkedAccountType
 from api.core.user import UserHelper
 from api.core.group import GroupHelper
-
-import tornado.ioloop
 
 
 class GroupModel(object):
@@ -29,12 +21,16 @@ class GroupModel(object):
             self._uh = UserHelper(db=self.db)
 
     @coroutine
-    def create_group(self, groupDict, userId, type):
+    def create_group(self, groupDict, userId=None, type=None):
+        if not userId:
+            userId = self._user.UserId
         group = Group()
         group.Name = groupDict.get(Group.PropertyNames.Name)
         group.OwnerId = userId
-        group.Type = type
-        group.MemberMappings.append(self._gh.create_member_mapping(self._user.UserId, [SupportedRoles.Admin]))
+        if type:
+            group.Type = type
+        membermappings = [self._gh.create_member_mapping(self._user.UserId, [SupportedRoles.Admin])]
+        group.MemberMappings = membermappings
         group.set_value(group.PropertyNames.CreatedTimeStamp, datetime.datetime.now())
         group.set_value(group.PropertyNames.UpdatedTimeStamp, datetime.datetime.now())
         group_result = yield self._gh.create_group_for_user(group.datadict)
@@ -53,10 +49,6 @@ class GroupModel(object):
     def create_employee_team(self, **kwargs):
         group = self.create_group(kwargs, self._user.UserId, GroupType.EmployeeTeam)
         raise Return(group)
-
-    @coroutine
-    def create_pharmaceutical_distributor(self, **kwargs):
-        group = self.create_group(kwargs, GroupType.PharmaCompany)
 
     @coroutine
     def get_groups_for_user(self, userId):

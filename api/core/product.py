@@ -1,9 +1,5 @@
 from tornado.gen import *
-from api.stores.group import Group, MemberMapping
-from api.stores.user import GroupMapping, SupportedRoles, User, StatusType
-from api.stores.product import Product
-from db import QueryConstants
-from db import Database
+from db.db import Database
 
 class ProductHelper:
     def __init__(self, user, db):

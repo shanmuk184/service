@@ -2,7 +2,7 @@ from tornado.web import RequestHandler
 from tornado.gen import *
 import simplejson as json
 import jwt
-from config import Settings
+from config.config import Settings
 from api.core.user import UserHelper
 
 settings=Settings()
@@ -44,20 +44,11 @@ class BaseHandler(RequestHandler):
         if auth:
             parts = auth.split()
             if parts[0].lower() != 'bearer':
-                self._transforms = []
-                self.set_status(401)
-                self.write("invalid header authorization")
-                self.finish()
+                raise Return((False))
             elif len(parts) == 1:
-                self._transforms = []
-                self.set_status(401)
-                self.write("invalid header authorization")
-                self.finish()
+                raise Return((False))
             elif len(parts) > 2:
-                self._transforms = []
-                self.set_status(401)
-                self.write("invalid header authorization")
-                self.finish()
+                raise Return((False))
             else:
                 payload = jwt.decode(
                     parts[1],
@@ -65,11 +56,6 @@ class BaseHandler(RequestHandler):
                     options=self.jwt_options
                 )
                 raise Return(payload)
-
-        else:
-            self._transforms = []
-            self.write("Missing authorization")
-            self.finish()
 
     @coroutine
     def get_current_user(self):
@@ -88,14 +74,14 @@ class BaseHandler(RequestHandler):
     @coroutine
     def set_default_headers(self):
         print("setting headers!!!")
-        self.set_header("Access-Control-Allow-Origin", "localhost")
+        self.set_header("Access-Control-Allow-Origin", "*")
         self.set_header("Access-Control-Allow-Headers", "content-type")
         self.set_header('Access-Control-Allow-Methods', 'POST, GET, OPTIONS')
 
     @coroutine
     def options(self):
         # no body
-        self.set_status(204)
+        self.set_status(200)
         self.finish()
 
     @coroutine

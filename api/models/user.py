@@ -2,25 +2,13 @@ from tornado.gen import *
 import bcrypt
 import jwt
 import base64
-from api.stores.user import User, LinkedAccount, LinkedAccountType
+from api.stores.user import User, LinkedAccount, LinkedAccountType, RegisterRequestParams
 from api.stores.group import Group
-from api.core.user import UserHelper
-from api.core.group import GroupHelper
-
+from api.models.base import BaseModel
 import tornado.ioloop
 
 
-class UserModel(object):
-    def __init__(self, **kwargs):
-        if not kwargs.get('db'):
-            raise ValueError('db should be present')
-        if kwargs.get('user'):
-            self._user = kwargs.get('user')
-
-        self.db = kwargs.get('db')
-        self._uh = UserHelper(db= self.db)
-        self._gh = GroupHelper(db = self.db )
-
+class UserModel(BaseModel):
     @coroutine
     def check_if_user_exists_with_same_email(self, email):
         if not email:
@@ -43,22 +31,22 @@ class UserModel(object):
     def create_user(self, postBodyDict):
         """
         :param postBodyDict:
-        username
         password
-        password1
         email
         :return:
         """
         user = User()
         user.Name = postBodyDict.get(user.PropertyNames.Name)
         user.Phone = postBodyDict.get(user.PropertyNames.Phone)
-        user.PrimaryEmail = postBodyDict.get(user.PropertyNames.PrimaryEmail)
-        user.EmployeeId = postBodyDict.get(user.PropertyNames.EmployeeId)
-        (employee_exists, _) = yield self.check_if_user_exists_with_same_employee_id(user.EmployeeId)
+        user.PrimaryEmail = postBodyDict.get(RegisterRequestParams.Email)
+        employee_exists = False
+        if postBodyDict.get(user.PropertyNames.EmployeeId):
+            user.EmployeeId = postBodyDict.get(user.PropertyNames.EmployeeId)
+            (employee_exists, _) = yield self.check_if_user_exists_with_same_employee_id(user.EmployeeId)
         (user_exists, _) = yield self.check_if_user_exists_with_same_email(user.PrimaryEmail)
         if user_exists or employee_exists:
             raise Return((False, 'User already exists'))
-        password = yield self.get_hashed_password(postBodyDict.get('password'))
+        password = yield self.get_hashed_password(RegisterRequestParams.Password)
         linkedaccount = LinkedAccount()
         linkedaccount.AccountName = user.PrimaryEmail
         linkedaccount.AccountHash = password.get('hash')
@@ -74,7 +62,8 @@ class UserModel(object):
 
     @coroutine
     def get_profile(self):
-        raise Return(self._user.datadict)
+        if self._user:
+            raise Return(self._user.datadict)
 
 
     def validate_password(self, postBodyDict):
@@ -97,15 +86,17 @@ class UserModel(object):
         password = dict.get('password')
         if not username or not password:
             raise Return((False, 'You must enter both fields'))
-
         try:
             user = yield self._uh.getUserByEmail(username)
-            linkedAccount = user.LinkedAccounts[0]
-            accounthash = linkedAccount.get(LinkedAccount.PropertyNames.AccountHash)
-            isvalidPassword = yield self.check_hashed_password(password, accounthash)
-            if isvalidPassword:
-                raise Return((True, user))
+            if user:
+                linkedAccount = user.LinkedAccounts[0]
+                accounthash = linkedAccount.get(LinkedAccount.PropertyNames.AccountHash)
+                isvalidPassword = yield self.check_hashed_password(password, accounthash)
+                if isvalidPassword:
+                    raise Return((True, user))
+                else:
+                    raise Return((False,'Wrong password'))
             else:
-                raise Return((False,'Wrong password'))
+                raise Return((False, 'user email does not exist'))
         except IndexError:
             raise Return((False, 'user email does not exist'))

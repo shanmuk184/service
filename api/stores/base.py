@@ -36,9 +36,9 @@ class BaseStoreModel:
         return _flat_dict
 
     def populate_data_dict(self, dictParam=None):
-        self._data_dict=dictParam
+        _flat_dict=dictParam
         if self._reverseMapping:
-            for key in dictParam:
+            for key in _flat_dict:
                 reverseMapping = self._reverseMapping.get(key)
                 value = dictParam[key]
                 if len(reverseMapping) == 2:
@@ -57,6 +57,30 @@ class BaseStoreModel:
                     self.set_value(key, value)
 
 
+    def get_value(self, key):
+        if not key:
+            raise NotImplementedError()
+        return self._data_dict.get(key)
+
+    def set_value(self, key, value):
+        if not key or not value:
+            raise NotImplementedError()
+        self._data_dict[key] = value
+
+
+# For future
+# class BaseApiModel(object):
+#     def __init__(self):
+#         self._data_dict = {}
+#     def populate_data_dict(self, dictParam):
+#         if not dictParam:
+#             raise NotImplementedError()
+#         missing_fields = list(set(list(self._fields)).difference(set(dictParam.keys())))
+#         if missing_fields:
+#             raise ValueError(missing_fields)
+#         for key in dictParam:
+#             self._data_dict[key] = dictParam.get(key)
+#
 
 
     def get_value(self, key):
@@ -68,3 +92,7 @@ class BaseStoreModel:
         if not key or not value:
             raise NotImplementedError()
         self._data_dict[key] = value
+
+
+    _fields = ()
+

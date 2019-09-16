@@ -1,29 +1,13 @@
-from tornado.gen import coroutine, Return
-from api.stores.group import Group
-from api.stores.user import GroupMapping, SupportedRoles, User, StatusType
-from db import QueryConstants
 from tornado.gen import *
-import bcrypt
-import jwt
-import base64
-from api.stores.user import User, LinkedAccount, LinkedAccountType
-from api.core.user import UserHelper
-from api.core.group import GroupHelper
 from api.core.product import ProductHelper
 from api.stores.product import Product
+from api.models.base import BaseModel
 
+class ProductModel(BaseModel):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
-class ProductModel(object):
-    def __init__(self, user=None, db=None):
-        if not db:
-            raise ValueError('db should be present')
-        if user:
-            self._user = user
-        self.db = db
-        if self.db:
-            self._gh = GroupHelper(self._user, self.db)
-            self._uh = UserHelper(self._user, self.db)
-            self._ph= ProductHelper(self._user, self.db)
+        self._ph = ProductHelper(**kwargs)
 
     @coroutine
     def create_product_for_group(self, productDict):

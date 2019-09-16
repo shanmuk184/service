@@ -1,10 +1,15 @@
 import tornado.ioloop
 import tornado.web
 from urls import urlpatterns
-from db import Database
-from config import Settings
+from db.db import Database
+from config.config import Settings
+from tornado_swirl.swagger import Application, describe
+from tornado_swirl import api_routes
+
 settings = Settings()
-class Application(object):
+
+describe(title='UMS API', description='Manages User Operations')
+class MyApplication(object):
     def __init__(self):
         self.database = Database()
         self.initiateApp()
@@ -15,7 +20,7 @@ class Application(object):
 
     def make_app(self):
         db = self.database.get_motor_connection()
-        return tornado.web.Application(urlpatterns,
+        return Application(api_routes(),
                                        db = db,
                                        cookie_secret=settings.CookieSecret,
                                        debug=settings.Debug,
@@ -24,11 +29,13 @@ class Application(object):
                                        )
 
 class MainHandler(tornado.web.RequestHandler):
+    """This is the main handler"""
     def get(self):
         self.write("Hello, world")
 
+
 if __name__ == "__main__":
-    app = Application()
+    app = MyApplication()
     print("server is running on 8888")
     tornado.ioloop.IOLoop.current().start()
     io_loop = tornado.ioloop.IOLoop.instance()
