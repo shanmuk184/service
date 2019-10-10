@@ -13,11 +13,13 @@ class UserHelper:
 
     @coroutine
     def save_user(self, user:dict):
+        user_result=None
         try:
-            user = yield self.db.UserCollection.insert_one(user)
+            user_result = yield self.db.UserCollection.insert_one(user)
         except Exception as e:
             print(str(e))
-        raise Return(user)
+        raise Return(user_result)
+
 
     @coroutine
     def getUserByUserId(self, userId):
@@ -35,6 +37,7 @@ class UserHelper:
             userprofile = User()
             userprofile.populate_data_dict(user)
             raise Return(userprofile)
+        raise Return(None)
 
     def create_group_mapping(self, groupId, role):
         memberMapping = GroupMapping()

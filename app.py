@@ -5,10 +5,14 @@ from db.db import Database
 from config.config import Settings
 from tornado_swirl.swagger import Application, describe
 from tornado_swirl import api_routes
+from tornado.options import define, options
 
 settings = Settings()
 
 describe(title='UMS API', description='Manages User Operations')
+define('mongo_host', default='127.0.0.1:')
+
+
 class MyApplication(object):
     def __init__(self):
         self.database = Database()
@@ -25,7 +29,8 @@ class MyApplication(object):
                                        cookie_secret=settings.CookieSecret,
                                        debug=settings.Debug,
                                        key_version=settings.KeyVersion,
-                                       version=settings.Version
+                                       version=settings.Version,
+                                        login_url='api/login'
                                        )
 
 class MainHandler(tornado.web.RequestHandler):

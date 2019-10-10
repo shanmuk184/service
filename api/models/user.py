@@ -2,11 +2,11 @@ from tornado.gen import *
 import bcrypt
 import jwt
 import base64
-from api.stores.user import User, LinkedAccount, LinkedAccountType, RegisterRequestParams
-from api.stores.group import Group
+from api.stores.user import User, LinkedAccount, LinkedAccountType, RegisterRequestParams, UserStatus
+from api.stores.group import Group, CreateEmployeeRequestParams
 from api.models.base import BaseModel
 import tornado.ioloop
-
+import uuid
 
 class UserModel(BaseModel):
     @coroutine
@@ -28,23 +28,22 @@ class UserModel(BaseModel):
         raise Return((False, None))
 
     @coroutine
-    def create_user(self, postBodyDict):
+    def create_admin_user(self, postBodyDict):
         """
         :param postBodyDict:
         password
         email
-        :return:
         """
         user = User()
         user.Name = postBodyDict.get(user.PropertyNames.Name)
         user.Phone = postBodyDict.get(user.PropertyNames.Phone)
         user.PrimaryEmail = postBodyDict.get(RegisterRequestParams.Email)
-        employee_exists = False
-        if postBodyDict.get(user.PropertyNames.EmployeeId):
-            user.EmployeeId = postBodyDict.get(user.PropertyNames.EmployeeId)
-            (employee_exists, _) = yield self.check_if_user_exists_with_same_employee_id(user.EmployeeId)
+        # employee_exists = False
+        # if postBodyDict.get(user.PropertyNames.EmployeeId):
+        #     user.EmployeeId = postBodyDict.get(user.PropertyNames.EmployeeId)
+            # (employee_exists, _) = yield self.check_if_user_exists_with_same_employee_id(user.EmployeeId)
         (user_exists, _) = yield self.check_if_user_exists_with_same_email(user.PrimaryEmail)
-        if user_exists or employee_exists:
+        if user_exists:
             raise Return((False, 'User already exists'))
         password = yield self.get_hashed_password(RegisterRequestParams.Password)
         linkedaccount = LinkedAccount()
@@ -52,18 +51,22 @@ class UserModel(BaseModel):
         linkedaccount.AccountHash = password.get('hash')
         linkedaccount.AccountType = LinkedAccountType.Native
         user.LinkedAccounts = [linkedaccount]
+        user.Status=UserStatus.Registered
+        user.EmailValidated=False
         user_result = yield self._uh.save_user(user.datadict)
         user = yield self._uh.getUserByUserId(user_result.inserted_id)
-
         # group = yield self._gh.createDummyGroupForUser(user_result.inserted_id)
         # yield self._gh.createGroupMemberMappingForDummyGroup(group.inserted_id, user_result.inserted_id)
         raise Return((True, user))
 
 
-    @coroutine
+
+
     def get_profile(self):
         if self._user:
-            raise Return(self._user.datadict)
+            return self._user.datadict
+
+    @coroutine
 
 
     def validate_password(self, postBodyDict):

@@ -16,7 +16,7 @@ class GroupsListHandler(BaseHandler):
             self.set_status(400, _)
             self.finish()
 
-class GroupHandler(BaseHandler):
+class CreateGroupHandler(BaseHandler):
     @web.authenticated
     @coroutine
     def post(self):
@@ -29,3 +29,7 @@ class GroupHandler(BaseHandler):
         self.finish(json.dumps({'status':'success'}))
 
 
+class CreateEmloyeeHandler(BaseHandler):
+    @coroutine
+    def post(self):
+        self.write("This is an employee Creation")

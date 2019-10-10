@@ -2,6 +2,8 @@ from enum import Enum
 from .base import BaseStoreModel
 import re
 from bson import ObjectId
+import uuid
+import datetime
 from tornado_swirl.swagger import schema
 class SupportedRoles:
     Admin = 'ad'
@@ -10,6 +12,11 @@ class SupportedRoles:
 class DisplayRoles:
     Employee = 'Employee'
     Owner = 'Owner'
+
+class UserStatus:
+    Invited = 'invited'
+    Registered = 'registered'
+
 
 @schema
 class RegisterRequestParams:
@@ -36,6 +43,7 @@ class LoginRequestParams:
     """
     UserName = 'username'
     Password = 'password'
+
 @schema
 class SuccessResponse:
     """
@@ -54,12 +62,9 @@ class StatusType:
     Invited = 'invited'
     Accepted = 'accepted'
 
-
-
 class GroupMapping(BaseStoreModel):
     class PropertyNames:
         GroupId ='group_id'
-
         Roles = 'roles'
         Status = 'status'
         Shifts = 'shift'
@@ -139,6 +144,12 @@ class LinkedAccount(BaseStoreModel):
         AccountHash = 'accounthash'
         AccountType = 'accounttype'
         AuthToken = 'authtoken'
+    _reverseMapping = {
+        'accountname':('AccountName', str),
+        'accounthash':('AccountHash', str),
+        'accounttype': ('AccountType', str),
+        'authtoken': ('AuthToken', str),
+    }
 
     @property
     def AuthToken(self):
@@ -170,9 +181,6 @@ class User(BaseStoreModel):
     This Design assumes All other baseModels are populated and entered into user
 
     '''
-
-    def __init__(self, **kwargs):
-        super().__init__()
 
     @property
     def UserId(self):
@@ -250,13 +258,18 @@ class User(BaseStoreModel):
             raise NotImplementedError('you must enter phone')
         self.set_value(self.PropertyNames.Phone, phone)
 
-    _reverseMappings = {
+    _reverseMapping = {
         '_id': ('UserId', ObjectId),
+        'name':('Name', str),
         'primaryemail': ('PrimaryEmail', str),
         'linkedaccounts': ('LinkedAccounts', list, LinkedAccount),
         'groups': ('Groups', list, GroupMapping),
         'phone': ('Phone', str),
-        'employeeid':('EmployeeId', int)
+        'employeeid':('EmployeeId', int),
+        'status':('Status',str),
+        'emailvalidated':('EmailValidated', bool),
+        'cts':('CreatedTimeStamp', datetime.datetime),
+        'uts': ('UpdatedTimeStamp', datetime.datetime)
     }
 
     class PropertyNames:
@@ -267,25 +280,76 @@ class User(BaseStoreModel):
         Groups = 'groups'
         Phone = 'phone'
         EmployeeId = 'employeeid'
+        Status='status'
+        EmailValidated='emailvalidated'
+        CreatedTimeStamp = 'cts'
+        UpdatedTimeStamp = 'uts'
 
-    def populate_data_dict(self,dictParam=None):
-        self._data_dict = dictParam
-        linkedAccountsList = dictParam.get(self.PropertyNames.LinkedAccounts)
-        groupsList = dictParam.get(self.PropertyNames.Groups)
-        linkedaccounts = []
-        groups = []
-        for linkedAccount in linkedAccountsList:
-            linkedaccount = LinkedAccount()
-            linkedaccount.populate_data_dict(linkedAccount)
-            linkedaccounts.append(linkedAccount)
-        if groupsList:
-            for group in groupsList:
-                groupMapping = GroupMapping()
-                groupMapping.populate_data_dict(group)
-                groups.append(groupMapping)
-        self.set_value(self.PropertyNames.LinkedAccounts, linkedaccounts)
-        if groupsList:
-            self.set_value(self.PropertyNames.Groups, groups)
+
+
+    @property
+    def Status(self):
+        return self.get_value(self.PropertyNames.Status)
+
+    @Status.setter
+    def Status(self, status):
+        if not status:
+            raise NotImplementedError()
+        self.set_value(self.PropertyNames.Status, status)
+
+
+
+    @property
+    def EmailValidated(self):
+        return self.get_value(self.PropertyNames.EmailValidated)
+
+    @EmailValidated.setter
+    def EmailValidated(self, emv):
+        if not emv:
+            raise NotImplementedError()
+        self.set_value(self.PropertyNames.EmailValidated, emv)
+
+    @property
+    def CreatedTimeStamp(self):
+        return self.get_value(self.PropertyNames.CreatedTimeStamp)
+
+    @CreatedTimeStamp.setter
+    def CreatedTimeStamp(self, jts):
+        if not jts:
+            raise NotImplementedError()
+        self.set_value(self.PropertyNames.CreatedTimeStamp, jts)
+
+
+    @property
+    def UpdatedTimeStamp(self):
+        return self.get_value(self.PropertyNames.UpdatedTimeStamp)
+
+    @UpdatedTimeStamp.setter
+    def UpdatedTimeStamp(self, lts):
+        if not lts:
+            raise NotImplementedError()
+        self.set_value(self.PropertyNames.UpdatedTimeStamp, lts)
+
+
+    #
+    # def populate_data_dict(self,dictParam=None):
+    #     self._data_dict = dictParam
+    #     linkedAccountsList = dictParam.get(self.PropertyNames.LinkedAccounts)
+    #     groupsList = dictParam.get(self.PropertyNames.Groups)
+    #     linkedaccounts = []
+    #     groups = []
+    #     for linkedAccount in linkedAccountsList:
+    #         linkedaccount = LinkedAccount()
+    #         linkedaccount.populate_data_dict(linkedAccount)
+    #         linkedaccounts.append(linkedAccount)
+    #     if groupsList:
+    #         for group in groupsList:
+    #             groupMapping = GroupMapping()
+    #             groupMapping.populate_data_dict(group)
+    #             groups.append(groupMapping)
+    #     self.set_value(self.PropertyNames.LinkedAccounts, linkedaccounts)
+    #     if groupsList:
+    #         self.set_value(self.PropertyNames.Groups, groups)
 
 #
 # class UserRegistrationForm(BaseApiModel):

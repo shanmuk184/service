@@ -1,6 +1,6 @@
 from tornado import web
 from tornado.gen import *
-from .baseHandler import BaseHandler
+from .baseHandler import BaseHandler, BaseApiHandler
 import simplejson as json
 from api.models.user import UserModel
 from bson.json_util import dumps
@@ -69,7 +69,7 @@ class LoginHandler(BaseHandler):
             self.finish()
 
 @restapi('/api/profile')
-class ProfileHandler(BaseHandler):
+class ProfileHandler(BaseApiHandler):
     @web.authenticated
     @coroutine
     def get(self):
@@ -83,7 +83,8 @@ class ProfileHandler(BaseHandler):
             status (ProfileSchema) -- success
         :return:
         """
-        user = yield self.current_user
-        model = UserModel(user=user,db=self.db)
-        profile = yield model.get_profile()
+
+        model = UserModel(user=self._user,db=self.db)
+        profile = model.get_profile()
+
         self.write(dumps(profile))

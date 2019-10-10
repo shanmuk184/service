@@ -4,6 +4,13 @@ from api.stores.product import Product
 from bson import ObjectId
 from datetime import datetime
 
+
+
+class CreateEmployeeRequestParams:
+    Name = 'name'
+    Designation='designation'
+    EmailId='email_id'
+
 class GroupType(Enum):
     Stockist = 'res'
     Direct = 'phc'
@@ -13,11 +20,13 @@ class GroupType(Enum):
 class MemberMapping(BaseStoreModel):
     class PropertyNames:
         MemberId = 'member_id'
-        Title = "Title"
+        Designation = "designation"
         Roles = 'roles'
         Status = 'status'
         Shifts = 'shift'
         Tasks = 'tasks'
+        JoinedTimeStamp='jts'
+        LastUpdatedTimeStamp='lts'
 
     @property
     def MemberId(self):
@@ -30,14 +39,14 @@ class MemberMapping(BaseStoreModel):
         return self.set_value(self.PropertyNames.MemberId, memberId)
 
     @property
-    def Title(self):
-        return self.get_value(self.PropertyNames.Title)
+    def Designation(self):
+        return self.get_value(self.PropertyNames.Designation)
 
-    @Title.setter
-    def Title(self, title):
+    @Designation.setter
+    def Designation(self, title):
         if not title:
             raise NotImplementedError()
-        self.set_value(self.PropertyNames.Title, title)
+        self.set_value(self.PropertyNames.Designation, title)
 
     @property
     def Roles(self):
@@ -59,10 +68,28 @@ class MemberMapping(BaseStoreModel):
         if not status:
             raise NotImplementedError('you must give roles')
         return self.set_value(self.PropertyNames.Status, status)
-    #
-    # @property
-    # def CreatedTimeStamp(self):
-    #     if not
+
+    @property
+    def JoinedTimeStamp(self):
+        return self.get_value(self.PropertyNames.JoinedTimeStamp)
+
+    @JoinedTimeStamp.setter
+    def JoinedTimeStamp(self, jts):
+        if not jts:
+            raise NotImplementedError()
+        self.set_value(self.PropertyNames.JoinedTimeStamp, jts)
+
+
+    @property
+    def LastUpdatedTimeStamp(self):
+        return self.get_value(self.PropertyNames.LastUpdatedTimeStamp)
+
+    @LastUpdatedTimeStamp.setter
+    def LastUpdatedTimeStamp(self, lts):
+        if not lts:
+            raise NotImplementedError()
+        self.set_value(self.PropertyNames.LastUpdatedTimeStamp, lts)
+
 
 class SubGroupType:
     EmployeeGroup = 'emg'

@@ -1,9 +1,9 @@
-from api.stores.group import Group, GroupType
-from api.stores.user import SupportedRoles
+from api.stores.group import Group, GroupType, CreateEmployeeRequestParams, MemberMapping
+from api.stores.user import SupportedRoles, User, GroupMapping, UserStatus
 from tornado.gen import *
 from api.core.user import UserHelper
 from api.core.group import GroupHelper
-
+import uuid
 
 class GroupModel(object):
     def __init__(self, **kwargs):
@@ -60,3 +60,48 @@ class GroupModel(object):
             raise Return((False, str(e)))
         else:
             raise Return((True, groups))
+
+    def create_invited_state_user(self, invitedDict):
+        employee=User()
+        employee.Name = invitedDict.get(CreateEmployeeRequestParams.Name)
+        employee.PrimaryEmail = invitedDict.get(CreateEmployeeRequestParams.EmailId)
+        employee.UserId = uuid.uuid4()
+        employee.Status=UserStatus.Invited
+        employee.EmailValidated=False
+        employee.CreatedTimeStamp=datetime.datetime.now()
+        employee.UpdatedTimeStamp=datetime.datetime.now()
+        return employee
+
+
+    @coroutine
+    def create_employee(self, employeeDict, groupId):
+        """
+            Employee added by admin.
+            This method takes input from admin and creates user profile and
+            creates membermapping for corresponding group.
+            employeeDict should contain
+            name,
+            designation
+            emailid
+            :return:
+        """
+        if not (employeeDict and  groupId):
+            raise NotImplementedError()
+        employee=self.create_invited_state_user(employeeDict)
+        employee_result = yield self._uh.save_user(employee.datadict)
+
+        if employee_result:
+            employee_mapping = MemberMapping()
+            employee_mapping.MemberId = employee.UserId
+            employee_mapping.Designation = employeeDict.get(CreateEmployeeRequestParams.Designation)
+            employee_mapping.Roles=[SupportedRoles.Member]
+            employee_mapping.JoinedTimeStamp = datetime.datetime.now()
+            employee_mapping.LastUpdatedTimeStamp = datetime.datetime.now()
+            self._gh.insert_member_mapping_into_group(groupId, employee_mapping.datadict)
+
+
+
+
+
+
+

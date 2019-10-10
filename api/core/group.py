@@ -37,13 +37,11 @@ class GroupHelper:
             groups.append(groupDict)
         raise Return((groups))
 
-
-
-    def create_member_mapping(self, groupId, role):
+    def create_member_mapping(self, memberId, roles):
         memberMapping = MemberMapping()
-        memberMapping.GroupId = groupId
-        memberMapping.Roles = [role]
-        if role == SupportedRoles.Admin:
+        memberMapping.MemberId = memberId
+        memberMapping.Roles = roles
+        if SupportedRoles.Admin in roles:
             memberMapping.Status = StatusType.Accepted
         else:
             memberMapping.Status = StatusType.Invited

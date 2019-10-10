@@ -5,11 +5,13 @@ import jwt
 from config.config import Settings
 from api.core.user import UserHelper
 
+
+
 settings=Settings()
+
 class BaseHandler(RequestHandler):
     def __init__(self, application , request, **kwargs):
         super().__init__(application, request, **kwargs)
-
         self.jwt_options = {
             'verify_signature': True,
             'verify_exp': True,
@@ -65,9 +67,10 @@ class BaseHandler(RequestHandler):
             if user:
                 self._user = user
                 raise Return(user)
+        # return self.get_secure_cookie(settings.AppName)
+
     @coroutine
     def prepare(self):
-        self._user = yield self.current_user
         if self.request.method == 'POST':
             self.args = json.loads(self.request.body)
 
@@ -93,6 +96,16 @@ class BaseHandler(RequestHandler):
         self.current_user = user_profile
         auth_token = yield self.create_auth_token(user_profile.UserId)
         self._user = user_profile
-        self.set_cookie(settings.AppName, auth_token)
+        self.set_secure_cookie(settings.AppName, self._user.PrimaryEmail)
         self.set_auth_token_header(auth_token)
         raise Return(auth_token)
+
+class BaseApiHandler(BaseHandler):
+    @coroutine
+    def prepare(self):
+        user = yield self.current_user
+        if user:
+            self._user = user
+        yield super().prepare()
+
+
