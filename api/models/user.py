@@ -2,7 +2,7 @@ from tornado.gen import *
 import bcrypt
 import jwt
 import base64
-from api.stores.user import User, LinkedAccount, LinkedAccountType, RegisterRequestParams, UserStatus
+from api.stores.user import User, LinkedAccount, LinkedAccountType, RegisterRequestParams, UserStatus, EmailValidationStatus, NewUserStatus
 from api.stores.group import Group, CreateEmployeeRequestParams
 from api.models.base import BaseModel
 import tornado.ioloop
@@ -45,22 +45,19 @@ class UserModel(BaseModel):
         (user_exists, _) = yield self.check_if_user_exists_with_same_email(user.PrimaryEmail)
         if user_exists:
             raise Return((False, 'User already exists'))
-        password = yield self.get_hashed_password(RegisterRequestParams.Password)
+        password = yield self.get_hashed_password(postBodyDict.get(RegisterRequestParams.Password))
         linkedaccount = LinkedAccount()
         linkedaccount.AccountName = user.PrimaryEmail
         linkedaccount.AccountHash = password.get('hash')
         linkedaccount.AccountType = LinkedAccountType.Native
         user.LinkedAccounts = [linkedaccount]
         user.Status=UserStatus.Registered
-        user.EmailValidated=False
+        user.EmailValidated = EmailValidationStatus.NotValidated
         user_result = yield self._uh.save_user(user.datadict)
         user = yield self._uh.getUserByUserId(user_result.inserted_id)
         # group = yield self._gh.createDummyGroupForUser(user_result.inserted_id)
         # yield self._gh.createGroupMemberMappingForDummyGroup(group.inserted_id, user_result.inserted_id)
         raise Return((True, user))
-
-
-
 
     def get_profile(self):
         if self._user:

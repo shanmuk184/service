@@ -74,16 +74,16 @@ class BaseHandler(RequestHandler):
         if self.request.method == 'POST':
             self.args = json.loads(self.request.body)
 
-    @coroutine
     def set_default_headers(self):
         print("setting headers!!!")
         self.set_header("Access-Control-Allow-Origin", "*")
-        self.set_header("Access-Control-Allow-Headers", "content-type")
+        self.set_header("Access-Control-Allow-Headers", "Content-type")
         self.set_header('Access-Control-Allow-Methods', 'POST, GET, OPTIONS')
 
     @coroutine
     def options(self):
         # no body
+        self.set_default_headers()
         self.set_status(200)
         self.finish()
 

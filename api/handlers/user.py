@@ -27,7 +27,7 @@ class RegisterHandler(BaseHandler):
         """
         model = UserModel(db=self.db)
         try:
-            (status, _) = yield model.create_user(self.args)
+            (status, _) = yield model.create_admin_user(self.args)
         except Exception as e:
             (status, _) = (False, str(e))
         if status:

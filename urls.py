@@ -5,10 +5,11 @@ from api.handlers.event import EventHandler
 
 
 urlpatterns = [
+    # Admin register handler
     (r"/api/register$", RegisterHandler),
     (r"/api/login$",LoginHandler ),
     (r'/api/profile', ProfileHandler),
-    (r'/api/employee$', ),
+    (r'/api/employee$', GroupsListHandler),
     (r'/api/group$', CreateGroupHandler),
     (r'/api/product', ProductHandler),
     (r'/api/event', EventHandler),

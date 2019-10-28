@@ -62,6 +62,5 @@ class UserHelper:
         criteria = {}
         criteria[User.PropertyNames.UserId] =  userId
         updateDict = {}
-
         updateDict[User.PropertyNames.LinkedAccounts+'.'+LinkedAccount.PropertyNames.AuthToken] = authToken
         yield self.db.UserCollection.update(criteria, updateDict)

@@ -17,6 +17,13 @@ class UserStatus:
     Invited = 'invited'
     Registered = 'registered'
 
+class EmailValidationStatus:
+    Validated = 'validated'
+    NotValidated = 'not_validated'
+
+class NewUserStatus:
+    Yes = 'yes'
+    No = 'no'
 
 @schema
 class RegisterRequestParams:
