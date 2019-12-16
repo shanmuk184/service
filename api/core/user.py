@@ -1,7 +1,6 @@
 from tornado.gen import *
 from api.stores.user import User, LinkedAccount, GroupMapping, SupportedRoles, StatusType
-from db import Database
-from tornado.ioloop import IOLoop
+from db.db import Database
 from bson import ObjectId
 class UserHelper:
     def __init__(self, user=None, db=None):
@@ -14,11 +13,13 @@ class UserHelper:
 
     @coroutine
     def save_user(self, user:dict):
+        user_result=None
         try:
-            user = yield self.db.UserCollection.insert_one(user)
+            user_result = yield self.db.UserCollection.insert_one(user)
         except Exception as e:
             print(str(e))
-        raise Return(user)
+        raise Return(user_result)
+
 
     @coroutine
     def getUserByUserId(self, userId):
@@ -36,6 +37,7 @@ class UserHelper:
             userprofile = User()
             userprofile.populate_data_dict(user)
             raise Return(userprofile)
+        raise Return(None)
 
     def create_group_mapping(self, groupId, role):
         memberMapping = GroupMapping()
@@ -60,6 +62,5 @@ class UserHelper:
         criteria = {}
         criteria[User.PropertyNames.UserId] =  userId
         updateDict = {}
-
         updateDict[User.PropertyNames.LinkedAccounts+'.'+LinkedAccount.PropertyNames.AuthToken] = authToken
         yield self.db.UserCollection.update(criteria, updateDict)

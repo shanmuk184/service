@@ -1,7 +1,5 @@
-from motor.motor_tornado import MotorClient, MotorCollection
-from config import Settings
-from enum import Enum
-from tornado.gen import coroutine, Return
+from motor.motor_tornado import MotorClient
+from config.config import Settings
 
 settings = Settings()
 class QueryConstants:

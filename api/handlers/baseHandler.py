@@ -2,14 +2,16 @@ from tornado.web import RequestHandler
 from tornado.gen import *
 import simplejson as json
 import jwt
-from config import Settings
+from config.config import Settings
 from api.core.user import UserHelper
 
+
+
 settings=Settings()
+
 class BaseHandler(RequestHandler):
     def __init__(self, application , request, **kwargs):
         super().__init__(application, request, **kwargs)
-
         self.jwt_options = {
             'verify_signature': True,
             'verify_exp': True,
@@ -44,20 +46,11 @@ class BaseHandler(RequestHandler):
         if auth:
             parts = auth.split()
             if parts[0].lower() != 'bearer':
-                self._transforms = []
-                self.set_status(401)
-                self.write("invalid header authorization")
-                self.finish()
+                raise Return((False))
             elif len(parts) == 1:
-                self._transforms = []
-                self.set_status(401)
-                self.write("invalid header authorization")
-                self.finish()
+                raise Return((False))
             elif len(parts) > 2:
-                self._transforms = []
-                self.set_status(401)
-                self.write("invalid header authorization")
-                self.finish()
+                raise Return((False))
             else:
                 payload = jwt.decode(
                     parts[1],
@@ -65,11 +58,6 @@ class BaseHandler(RequestHandler):
                     options=self.jwt_options
                 )
                 raise Return(payload)
-
-        else:
-            self._transforms = []
-            self.write("Missing authorization")
-            self.finish()
 
     @coroutine
     def get_current_user(self):
@@ -79,23 +67,24 @@ class BaseHandler(RequestHandler):
             if user:
                 self._user = user
                 raise Return(user)
+        # return self.get_secure_cookie(settings.AppName)
+
     @coroutine
     def prepare(self):
-        self._user = yield self.current_user
         if self.request.method == 'POST':
             self.args = json.loads(self.request.body)
 
-    @coroutine
     def set_default_headers(self):
         print("setting headers!!!")
-        self.set_header("Access-Control-Allow-Origin", "localhost")
-        self.set_header("Access-Control-Allow-Headers", "content-type")
+        self.set_header("Access-Control-Allow-Origin", "*")
+        self.set_header("Access-Control-Allow-Headers", "Content-type")
         self.set_header('Access-Control-Allow-Methods', 'POST, GET, OPTIONS')
 
     @coroutine
     def options(self):
         # no body
-        self.set_status(204)
+        self.set_default_headers()
+        self.set_status(200)
         self.finish()
 
     @coroutine
@@ -107,6 +96,16 @@ class BaseHandler(RequestHandler):
         self.current_user = user_profile
         auth_token = yield self.create_auth_token(user_profile.UserId)
         self._user = user_profile
-        self.set_cookie(settings.AppName, auth_token)
+        self.set_secure_cookie(settings.AppName, self._user.PrimaryEmail)
         self.set_auth_token_header(auth_token)
         raise Return(auth_token)
+
+class BaseApiHandler(BaseHandler):
+    @coroutine
+    def prepare(self):
+        user = yield self.current_user
+        if user:
+            self._user = user
+        yield super().prepare()
+
+

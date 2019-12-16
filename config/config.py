@@ -1,6 +1,6 @@
 import os
 import configparser
-SETTINGS_PATH=os.path.join(os.path.abspath(os.path.dirname(__file__)), 'settings.ini')
+SETTINGS_PATH=os.path.join(os.path.dirname(os.path.dirname(__file__)), 'settings.ini')
 
 class Settings:
     def __init__(self):
